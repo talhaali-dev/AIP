@@ -1,0 +1,159 @@
+{
+  "aip_version": "0.1.0",
+  
+  "capability": {
+    "id": "com.github.mcp-server",
+    "name": "GitHub MCP Server",
+    "version": "2.1.0",
+    "description": "MCP server providing GitHub API integration for repositories, issues, pull requests, and code search",
+    "type": "mcp_server",
+    "provider": {
+      "name": "GitHub, Inc.",
+      "url": "https://github.com",
+      "contact": "support@github.com"
+    },
+    "homepage": "https://github.com/github/mcp-server",
+    "repository": "https://github.com/github/mcp-server",
+    "license": "MIT"
+  },
+  
+  "installation": {
+    "platforms": ["linux", "macos", "windows"],
+    "requirements": {
+      "node": ">=20.0.0"
+    },
+    "steps": [
+      {
+        "type": "npm_install",
+        "description": "Install GitHub MCP server package",
+        "package": "@github/mcp-server",
+        "version": "^2.1.0",
+        "global": true,
+        "validation": {
+          "command": "github-mcp-server --version",
+          "expected_exit_code": 0
+        }
+      }
+    ],
+    "post_install": {
+      "message": "GitHub MCP server installed successfully! Configure your GitHub token to get started.",
+      "configuration_required": true
+    }
+  },
+  
+  "configuration": {
+    "parameters": [
+      {
+        "name": "github_token",
+        "type": "secret",
+        "description": "GitHub personal access token with repo and user scope",
+        "required": true,
+        "validation": {
+          "pattern": "^(ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{82})$"
+        }
+      },
+      {
+        "name": "server_port",
+        "type": "number",
+        "description": "Port for SSE server",
+        "required": false,
+        "default": 3100,
+        "validation": {
+          "min": 1024,
+          "max": 65535
+        }
+      },
+      {
+        "name": "default_org",
+        "type": "string",
+        "description": "Default GitHub organization for searches",
+        "required": false
+      }
+    ],
+    "config_file": {
+      "path": "~/.github-mcp/config.json",
+      "format": "json",
+      "template": {
+        "token": "${github_token}",
+        "port": "${server_port}",
+        "defaultOrg": "${default_org}"
+      }
+    }
+  },
+  
+  "tools": {
+    "protocol": "mcp",
+    "connection": {
+      "type": "sse",
+      "url": "http://localhost:${server_port}/sse",
+      "start_command": "github-mcp-server --port ${server_port} --config ~/.github-mcp/config.json"
+    },
+    "available_tools": [
+      {
+        "name": "search_repositories",
+        "description": "Search for GitHub repositories using keywords, topics, or advanced query syntax"
+      },
+      {
+        "name": "create_issue",
+        "description": "Create a new issue in a GitHub repository"
+      },
+      {
+        "name": "get_pull_requests",
+        "description": "List pull requests for a repository with optional filtering"
+      },
+      {
+        "name": "search_code",
+        "description": "Search for code across GitHub repositories"
+      },
+      {
+        "name": "get_repository",
+        "description": "Get detailed information about a specific repository"
+      }
+    ]
+  },
+  
+  "permissions": {
+    "required": ["network:http", "process:execute"],
+    "scope": {
+      "network": {
+        "domains": ["api.github.com", "github.com"],
+        "protocols": ["https"],
+        "ports": [443]
+      }
+    }
+  },
+  
+  "skill": {
+    "included": true,
+    "location": "https://github.com/github/mcp-server/blob/main/SKILL.md",
+    "local_path": "~/.aip/skills/github-integration.md"
+  },
+  
+  "metadata": {
+    "tags": ["github", "version-control", "collaboration", "mcp", "code-search"],
+    "category": "developer-tools",
+    "keywords": ["git", "repository", "issues", "pull-requests", "code-review", "github-api"],
+    "use_cases": [
+      "Automated issue creation from bug reports",
+      "Repository discovery and analysis",
+      "Pull request management",
+      "Code search across organizations",
+      "Project automation"
+    ]
+  },
+  
+  "uninstall": {
+    "steps": [
+      {
+        "type": "command",
+        "description": "Uninstall GitHub MCP server",
+        "command": "npm uninstall -g @github/mcp-server"
+      },
+      {
+        "type": "delete",
+        "description": "Remove configuration and cache",
+        "paths": ["~/.github-mcp"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,412 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aip-protocol.org/schemas/manifest/v0.1.0",
+  "title": "AIP Capability Manifest Schema",
+  "description": "JSON Schema for Agent Interoperability Protocol capability manifests",
+  "type": "object",
+  "required": ["aip_version", "capability", "tools"],
+  "properties": {
+    "aip_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "AIP protocol version (semantic versioning)"
+    },
+    
+    "capability": {
+      "type": "object",
+      "required": ["id", "name", "version", "description", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "description": "Unique capability identifier (reverse domain notation)"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.-]+)?(\\+[a-zA-Z0-9.-]+)?$",
+          "description": "Semantic version"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "type": {
+          "type": "string",
+          "enum": ["mcp_server", "cli_tool", "api_service"]
+        },
+        "provider": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {"type": "string"},
+            "url": {"type": "string", "format": "uri"},
+            "contact": {"type": "string", "format": "email"}
+          }
+        },
+        "homepage": {"type": "string", "format": "uri"},
+        "repository": {"type": "string", "format": "uri"},
+        "license": {"type": "string"}
+      }
+    },
+    
+    "installation": {
+      "type": "object",
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["linux", "macos", "windows", "docker"]
+          },
+          "minItems": 1
+        },
+        "requirements": {
+          "type": "object",
+          "properties": {
+            "node": {"type": "string"},
+            "python": {"type": "string"},
+            "docker": {"type": "boolean"},
+            "system_packages": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/installation_step"},
+          "minItems": 1
+        },
+        "post_install": {
+          "type": "object",
+          "properties": {
+            "message": {"type": "string"},
+            "configuration_required": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/configuration_parameter"}
+        },
+        "config_file": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "format": {
+              "type": "string",
+              "enum": ["json", "yaml", "toml", "env"]
+            },
+            "template": {"type": "object"}
+          }
+        }
+      }
+    },
+    
+    "tools": {
+      "type": "object",
+      "required": ["protocol"],
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "enum": ["mcp", "cli", "http"],
+          "description": "Native protocol used for tool invocation"
+        },
+        "connection": {
+          "oneOf": [
+            {"$ref": "#/definitions/mcp_connection"},
+            {"$ref": "#/definitions/cli_connection"},
+            {"$ref": "#/definitions/http_connection"}
+          ]
+        },
+        "available_tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": {"type": "string"},
+              "description": {"type": "string"}
+            }
+          },
+          "description": "High-level list of tools for documentation (actual schemas come from native protocol)"
+        }
+      }
+    },
+    
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "filesystem:read",
+              "filesystem:write",
+              "filesystem:delete",
+              "filesystem:execute",
+              "network:http",
+              "network:socket",
+              "network:dns",
+              "process:execute",
+              "process:signal",
+              "system:env",
+              "system:info"
+            ]
+          }
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "filesystem": {
+              "type": "object",
+              "properties": {
+                "paths": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "operations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["read", "write", "delete", "execute"]
+                  }
+                }
+              }
+            },
+            "network": {
+              "type": "object",
+              "properties": {
+                "domains": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "protocols": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["http", "https", "ws", "wss"]
+                  }
+                },
+                "ports": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65535
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
+    "skill": {
+      "type": "object",
+      "description": "Optional skill (Markdown guide) to help agents understand this capability",
+      "properties": {
+        "included": {"type": "boolean"},
+        "location": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to skill Markdown file"
+        },
+        "local_path": {
+          "type": "string",
+          "description": "Local path where skill should be stored"
+        }
+      }
+    },
+    
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "category": {"type": "string"},
+        "keywords": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "use_cases": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    
+    "uninstall": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/installation_step"}
+        }
+      }
+    },
+    
+    "security": {
+      "type": "object",
+      "properties": {
+        "signature": {
+          "type": "object",
+          "required": ["algorithm", "public_key", "signature"],
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": ["ed25519", "rsa", "ecdsa"]
+            },
+            "public_key": {"type": "string"},
+            "signature": {"type": "string"}
+          }
+        }
+      }
+    }
+  },
+  
+  "definitions": {
+    "installation_step": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["npm_install", "pip_install", "docker_pull", "command", "download", "delete"]
+        },
+        "description": {"type": "string"},
+        "package": {"type": "string"},
+        "version": {"type": "string"},
+        "global": {"type": "boolean"},
+        "requirements_file": {"type": "string"},
+        "image": {"type": "string"},
+        "platform": {"type": "string"},
+        "command": {"type": "string"},
+        "url": {"type": "string", "format": "uri"},
+        "destination": {"type": "string"},
+        "checksum": {
+          "type": "object",
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": ["md5", "sha1", "sha256", "sha512"]
+            },
+            "value": {"type": "string"}
+          }
+        },
+        "permissions": {
+          "type": "string",
+          "pattern": "^[0-7]{3}$"
+        },
+        "paths": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "command": {"type": "string"},
+            "expected_exit_code": {"type": "integer"},
+            "expected_output": {"type": "string"}
+          }
+        }
+      }
+    },
+    
+    "configuration_parameter": {
+      "type": "object",
+      "required": ["name", "type", "description", "required"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "secret", "url", "path"]
+        },
+        "description": {"type": "string"},
+        "required": {"type": "boolean"},
+        "default": {},
+        "validation": {
+          "type": "object",
+          "properties": {
+            "pattern": {"type": "string"},
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "min_length": {"type": "integer"},
+            "max_length": {"type": "integer"}
+          }
+        }
+      }
+    },
+    
+    "mcp_connection": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["sse", "stdio"],
+          "description": "MCP transport type"
+        },
+        "url": {
+          "type": "string",
+          "description": "MCP server URL (for SSE)"
+        },
+        "start_command": {
+          "type": "string",
+          "description": "Command to start MCP server"
+        }
+      }
+    },
+    
+    "cli_connection": {
+      "type": "object",
+      "required": ["command"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Base command name"
+        }
+      }
+    },
+    
+    "http_connection": {
+      "type": "object",
+      "required": ["base_url"],
+      "properties": {
+        "base_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "authentication": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["header", "basic", "bearer", "oauth"]
+            },
+            "header_name": {"type": "string"},
+            "value": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

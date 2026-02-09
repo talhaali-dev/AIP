@@ -1,0 +1,126 @@
+{
+  "aip_version": "0.1.0",
+  
+  "capability": {
+    "id": "com.weather.api",
+    "name": "Weather Data API",
+    "version": "3.0.1",
+    "description": "Comprehensive weather data API providing current conditions, forecasts, historical data, and weather alerts",
+    "type": "api_service",
+    "provider": {
+      "name": "WeatherCo",
+      "url": "https://weatherapi.example.com",
+      "contact": "api-support@weatherapi.example.com"
+    },
+    "homepage": "https://weatherapi.example.com/docs",
+    "license": "Proprietary"
+  },
+  
+  "installation": {
+    "platforms": ["linux", "macos", "windows"],
+    "requirements": {},
+    "steps": [
+      {
+        "type": "command",
+        "description": "No installation required - cloud API service",
+        "command": "echo 'Weather API is a cloud service - no local installation needed'"
+      }
+    ],
+    "post_install": {
+      "message": "Sign up at https://weatherapi.example.com to get your API key. Free tier includes 1000 requests per day.",
+      "configuration_required": true
+    }
+  },
+  
+  "configuration": {
+    "parameters": [
+      {
+        "name": "api_key",
+        "type": "secret",
+        "description": "Weather API key from your account dashboard",
+        "required": true,
+        "validation": {
+          "pattern": "^[a-f0-9]{32}$"
+        }
+      },
+      {
+        "name": "default_units",
+        "type": "string",
+        "description": "Default unit system (metric, imperial, standard)",
+        "required": false,
+        "default": "metric"
+      },
+      {
+        "name": "default_language",
+        "type": "string",
+        "description": "Default language for weather descriptions (ISO 639-1)",
+        "required": false,
+        "default": "en"
+      }
+    ],
+    "config_file": {
+      "path": "~/.weather-api/config.json",
+      "format": "json",
+      "template": {
+        "apiKey": "${api_key}",
+        "units": "${default_units}",
+        "language": "${default_language}"
+      }
+    }
+  },
+  
+  "tools": {
+    "protocol": "http",
+    "connection": {
+      "base_url": "https://api.weatherapi.example.com",
+      "authentication": {
+        "type": "header",
+        "header_name": "X-API-Key",
+        "value": "${api_key}"
+      }
+    },
+    "available_tools": [
+      {
+        "name": "current_weather",
+        "description": "GET /v3/current - Get current weather conditions for a location"
+      },
+      {
+        "name": "forecast",
+        "description": "GET /v3/forecast - Get hourly and daily weather forecast up to 14 days"
+      },
+      {
+        "name": "alerts",
+        "description": "GET /v3/alerts - Get active weather alerts and warnings"
+      }
+    ]
+  },
+  
+  "permissions": {
+    "required": ["network:http"],
+    "scope": {
+      "network": {
+        "domains": ["api.weatherapi.example.com"],
+        "protocols": ["https"],
+        "ports": [443]
+      }
+    }
+  },
+  
+  "skill": {
+    "included": true,
+    "location": "https://weatherapi.example.com/docs/skill.md",
+    "local_path": "~/.aip/skills/weather-api.md"
+  },
+  
+  "metadata": {
+    "tags": ["weather", "forecast", "api", "data", "climate"],
+    "category": "data-services",
+    "keywords": ["weather", "forecast", "temperature", "precipitation", "alerts", "conditions"],
+    "use_cases": [
+      "Weather-based decision making for events",
+      "Travel planning with forecast data",
+      "Emergency preparedness and alerts",
+      "Smart home automation based on weather"
+    ]
+  }
+}

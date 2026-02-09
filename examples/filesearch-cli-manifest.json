@@ -1,0 +1,165 @@
+{
+  "aip_version": "0.1.0",
+  
+  "capability": {
+    "id": "com.turbolaunch.filesearch",
+    "name": "Advanced File Search",
+    "version": "1.3.0",
+    "description": "Fast semantic and full-text file search CLI tool with support for multiple file formats",
+    "type": "cli_tool",
+    "provider": {
+      "name": "Turbo Launch",
+      "url": "https://turbolaunch.com",
+      "contact": "support@turbolaunch.com"
+    },
+    "homepage": "https://turbolaunch.com/filesearch",
+    "repository": "https://github.com/turbolaunch/filesearch",
+    "license": "MIT"
+  },
+  
+  "installation": {
+    "platforms": ["linux", "macos", "windows"],
+    "requirements": {
+      "node": ">=18.0.0"
+    },
+    "steps": [
+      {
+        "type": "npm_install",
+        "description": "Install filesearch CLI globally",
+        "package": "@turbolaunch/filesearch",
+        "version": "^1.3.0",
+        "global": true,
+        "validation": {
+          "command": "filesearch --version",
+          "expected_exit_code": 0
+        }
+      },
+      {
+        "type": "command",
+        "description": "Initialize search index directory",
+        "command": "mkdir -p ~/.filesearch/indices"
+      }
+    ],
+    "post_install": {
+      "message": "File search installed! Configure your search paths before first use.",
+      "configuration_required": true
+    }
+  },
+  
+  "configuration": {
+    "parameters": [
+      {
+        "name": "search_paths",
+        "type": "string",
+        "description": "Comma-separated list of paths to search",
+        "required": true,
+        "default": "~/Documents,~/Projects"
+      },
+      {
+        "name": "max_results",
+        "type": "number",
+        "description": "Maximum number of results to return",
+        "required": false,
+        "default": 50,
+        "validation": {
+          "min": 1,
+          "max": 500
+        }
+      },
+      {
+        "name": "enable_semantic_search",
+        "type": "boolean",
+        "description": "Enable AI-powered semantic search",
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "embedding_api_key",
+        "type": "secret",
+        "description": "API key for semantic embedding service (if semantic search enabled)",
+        "required": false
+      }
+    ],
+    "config_file": {
+      "path": "~/.filesearch/config.json",
+      "format": "json",
+      "template": {
+        "searchPaths": "${search_paths}",
+        "maxResults": "${max_results}",
+        "semanticSearch": {
+          "enabled": "${enable_semantic_search}",
+          "apiKey": "${embedding_api_key}"
+        }
+      }
+    }
+  },
+  
+  "tools": {
+    "protocol": "cli",
+    "connection": {
+      "command": "filesearch"
+    },
+    "available_tools": [
+      {
+        "name": "search",
+        "description": "Search for files using keywords or semantic queries. Usage: filesearch search --query <query> [options]"
+      },
+      {
+        "name": "index",
+        "description": "Build or update search index for a directory. Usage: filesearch index --path <path>"
+      },
+      {
+        "name": "metadata",
+        "description": "Get detailed metadata for a file. Usage: filesearch metadata --path <file>"
+      }
+    ]
+  },
+  
+  "permissions": {
+    "required": ["filesystem:read", "network:http", "process:execute"],
+    "scope": {
+      "filesystem": {
+        "paths": ["~/Documents/*", "~/Projects/*", "~/.filesearch/*"],
+        "operations": ["read"]
+      },
+      "network": {
+        "domains": ["api.embedding-service.com"],
+        "protocols": ["https"],
+        "ports": [443]
+      }
+    }
+  },
+  
+  "skill": {
+    "included": true,
+    "location": "https://github.com/turbolaunch/filesearch/blob/main/SKILL.md",
+    "local_path": "~/.aip/skills/filesearch.md"
+  },
+  
+  "metadata": {
+    "tags": ["search", "files", "productivity", "semantic-search", "cli"],
+    "category": "file-management",
+    "keywords": ["find", "search", "grep", "locate", "files", "documents", "code"],
+    "use_cases": [
+      "Find files by content across large codebases",
+      "Locate documents using natural language queries",
+      "Search for specific code patterns or functions",
+      "Discover relevant files for research"
+    ]
+  },
+  
+  "uninstall": {
+    "steps": [
+      {
+        "type": "command",
+        "description": "Uninstall filesearch CLI",
+        "command": "npm uninstall -g @turbolaunch/filesearch"
+      },
+      {
+        "type": "delete",
+        "description": "Remove configuration and indices",
+        "paths": ["~/.filesearch"]
+      }
+    ]
+  }
+}
